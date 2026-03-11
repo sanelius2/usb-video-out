@@ -167,8 +167,8 @@ public class VideoOutputService extends Service {
                 screenWidth,
                 screenHeight,
                 metrics.densityDpi,
-                surface,
-                flags
+                flags,
+                surface
         );
     }
 
@@ -226,7 +226,7 @@ public class VideoOutputService extends Service {
                         // 查找输出端点
                         for (int i = 0; i < iface.getEndpointCount(); i++) {
                             UsbEndpoint endpoint = iface.getEndpoint(i);
-                            if (endpoint.getDirection() == UsbEndpoint.DIR_OUT) {
+                            if (endpoint.getDirection() == UsbEndpoint.DIRECTION_OUT) {
                                 usbEndpoint = endpoint;
                                 break;
                             }
@@ -300,13 +300,13 @@ public class VideoOutputService extends Service {
     // VirtualDisplay的包装类
     private static class VirtualDisplayWrapper {
         private VirtualDisplay virtualDisplay;
-        
+
         public VirtualDisplayWrapper(MediaProjection projection, String name, int width, int height,
-                                     int density, Surface surface, int flags) {
+                                     int density, int flags, Surface surface) {
             virtualDisplay = projection.createVirtualDisplay(name, width, height, density,
                     surface, flags, null, null);
         }
-        
+
         public void release() {
             if (virtualDisplay != null) {
                 virtualDisplay.release();
