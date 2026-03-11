@@ -44,19 +44,36 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        initViews();
-        initManagers();
-        registerUsbPermissionReceiver();
-        checkUsbDevices();
+        try {
+            setContentView(R.layout.activity_main);
+
+            initViews();
+            initManagers();
+
+            if (usbManager == null) {
+                Log.e(TAG, "UsbManager initialization failed");
+                Toast.makeText(this, "USB功能不可用", Toast.LENGTH_LONG).show();
+            }
+
+            registerUsbPermissionReceiver();
+            checkUsbDevices();
+        } catch (Exception e) {
+            Log.e(TAG, "onCreate error", e);
+            Toast.makeText(this, "初始化失败: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (usbPermissionReceiver != null) {
-            unregisterReceiver(usbPermissionReceiver);
+        try {
+            if (usbPermissionReceiver != null) {
+                unregisterReceiver(usbPermissionReceiver);
+                usbPermissionReceiver = null;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "unregisterReceiver error", e);
         }
         stopStreaming();
     }
@@ -95,6 +112,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkUsbDevices() {
+        if (usbManager == null) {
+            Log.e(TAG, "UsbManager is null");
+            tvUsbStatus.setText("USB管理器初始化失败");
+            return;
+        }
+
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
 
         if (deviceList.isEmpty()) {
