@@ -1,0 +1,10 @@
+{
+  "name": "USB Video Out",
+  "version": "1.0.0",
+  "description": "Android应用实现USB视频输出到显示器",
+  "main": "app/build.gradle",
+  "scripts": {
+    "build": "cd AndroidApp && ./gradlew assembleDebug",
+    "clean": "cd AndroidApp && ./gradlew clean"
+  }
+}
