@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
+import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
@@ -167,8 +168,8 @@ public class VideoOutputService extends Service {
                 screenWidth,
                 screenHeight,
                 metrics.densityDpi,
-                flags,
-                surface
+                surface,
+                flags
         );
     }
 
@@ -226,7 +227,7 @@ public class VideoOutputService extends Service {
                         // 查找输出端点
                         for (int i = 0; i < iface.getEndpointCount(); i++) {
                             UsbEndpoint endpoint = iface.getEndpoint(i);
-                            if (endpoint.getDirection() == UsbEndpoint.DIRECTION_OUT) {
+                            if (endpoint.getDirection() == UsbConstants.USB_DIR_OUT) {
                                 usbEndpoint = endpoint;
                                 break;
                             }
@@ -302,7 +303,7 @@ public class VideoOutputService extends Service {
         private VirtualDisplay virtualDisplay;
 
         public VirtualDisplayWrapper(MediaProjection projection, String name, int width, int height,
-                                     int density, int flags, Surface surface) {
+                                     int density, Surface surface, int flags) {
             virtualDisplay = projection.createVirtualDisplay(name, width, height, density,
                     surface, flags, null, null);
         }
