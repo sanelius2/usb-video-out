@@ -97,7 +97,8 @@ public class MainActivity extends AppCompatActivity {
     private void registerUsbPermissionReceiver() {
         usbPermissionFilter = new IntentFilter("com.usbvideoout.USB_PERMISSION");
         usbPermissionReceiver = new UsbPermissionReceiver();
-        registerReceiver(usbPermissionReceiver, usbPermissionFilter);
+        // 使用带flags的方法注册，指定不导出
+        registerReceiver(usbPermissionReceiver, usbPermissionFilter, Context.RECEIVER_NOT_EXPORTED);
 
         // 监听权限授予事件
         LocalBroadcastManager.getInstance(this).registerReceiver(
