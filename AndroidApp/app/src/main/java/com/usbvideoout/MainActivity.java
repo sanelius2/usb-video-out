@@ -121,8 +121,11 @@ public class MainActivity extends AppCompatActivity {
 
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
 
+        Log.d(TAG, "USB设备列表大小: " + deviceList.size());
+
         if (deviceList.isEmpty()) {
             tvUsbStatus.setText(R.string.usb_not_found);
+            tvInfo.setText("未检测到USB设备\n\n请检查:\n1. USB-C线缆是否已连接\n2. 手机是否支持USB Host模式\n3. USB设备是否已通电\n4. 是否已授予USB调试权限");
             connectedDevice = null;
             btnStart.setEnabled(false);
         } else {
@@ -133,6 +136,12 @@ public class MainActivity extends AppCompatActivity {
             // 检查是否已有权限
             if (!usbManager.hasPermission(firstDevice)) {
                 tvUsbStatus.setText("检测到设备，请求权限...");
+                tvInfo.setText("检测到USB设备:\n");
+                tvInfo.append(String.format("%s (VID:0x%04X PID:0x%04X)\n",
+                        firstDevice.getDeviceName(),
+                        firstDevice.getVendorId(),
+                        firstDevice.getProductId()));
+                tvInfo.append("\n等待授予USB权限...");
                 requestUsbPermission(firstDevice);
             } else {
                 tvUsbStatus.setText(R.string.usb_connected);

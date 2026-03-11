@@ -34,6 +34,17 @@
             </intent-filter>
         </activity>
 
+        <!-- USB调试活动 -->
+        <activity
+            android:name=".UsbDebugActivity"
+            android:exported="true"
+            android:label="USB调试">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <!-- USB设备连接接收 -->
         <activity
             android:name=".UsbDeviceActivity"
