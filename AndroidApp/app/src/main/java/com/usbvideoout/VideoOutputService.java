@@ -304,8 +304,8 @@ public class VideoOutputService extends Service {
 
         public VirtualDisplayWrapper(MediaProjection projection, String name, int width, int height,
                                      int density, int flags, Surface surface) {
-            virtualDisplay = projection.createVirtualDisplay(name, width, height, density,
-                    surface, flags, null, null);
+            virtualDisplay = projection.createVirtualDisplay(name, width, height, density, flags,
+                    surface, null, null);
         }
 
         public void release() {
