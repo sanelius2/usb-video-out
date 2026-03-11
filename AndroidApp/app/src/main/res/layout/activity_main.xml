@@ -30,6 +30,65 @@
         app:layout_constraintTop_toBottomOf="@id/tvTitle" />
 
     <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="输出模式:"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvStatus" />
+
+    <RadioGroup
+        android:id="@+id/rgOutputMode"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvStatus">
+
+        <RadioButton
+            android:id="@+id/rbUsbMode"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="USB模式" />
+
+        <RadioButton
+            android:id="@+id/rbNetworkMode"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="网络模式" />
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/etServerHost"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="服务器地址 (如: 192.168.1.100)"
+        android:inputType="text"
+        android:enabled="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rgOutputMode" />
+
+    <EditText
+        android:id="@+id/etServerPort"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="端口 (如: 5555)"
+        android:inputType="number"
+        android:enabled="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/etServerHost" />
+
+    <TextView
         android:id="@+id/tvUsbStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -39,7 +98,7 @@
         android:textColor="@android:color/darker_gray"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvStatus" />
+        app:layout_constraintTop_toBottomOf="@id/etServerPort" />
 
     <Button
         android:id="@+id/btnStart"

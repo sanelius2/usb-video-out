@@ -10,8 +10,13 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,6 +39,11 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvStatus;
     private TextView tvUsbStatus;
     private TextView tvInfo;
+    private EditText etServerHost;
+    private EditText etServerPort;
+    private RadioGroup rgOutputMode;
+    private RadioButton rbUsbMode;
+    private RadioButton rbNetworkMode;
     private Button btnStart;
     private Button btnStop;
 
@@ -82,8 +92,34 @@ public class MainActivity extends AppCompatActivity {
         tvStatus = findViewById(R.id.tvStatus);
         tvUsbStatus = findViewById(R.id.tvUsbStatus);
         tvInfo = findViewById(R.id.tvInfo);
+        etServerHost = findViewById(R.id.etServerHost);
+        etServerPort = findViewById(R.id.etServerPort);
+        rgOutputMode = findViewById(R.id.rgOutputMode);
+        rbUsbMode = findViewById(R.id.rbUsbMode);
+        rbNetworkMode = findViewById(R.id.rbNetworkMode);
         btnStart = findViewById(R.id.btnStart);
         btnStop = findViewById(R.id.btnStop);
+
+        // 设置默认值
+        etServerHost.setText("127.0.0.1");
+        etServerPort.setText("5555");
+
+        // 输出模式切换
+        rgOutputMode.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.rbUsbMode) {
+                etServerHost.setEnabled(false);
+                etServerPort.setEnabled(false);
+                checkUsbDevices();
+            } else {
+                etServerHost.setEnabled(true);
+                etServerPort.setEnabled(true);
+                tvUsbStatus.setText("网络模式");
+                btnStart.setEnabled(true);
+            }
+        });
+
+        // 默认使用网络模式
+        rbNetworkMode.setChecked(true);
 
         btnStart.setOnClickListener(v -> requestScreenCapture());
         btnStop.setOnClickListener(v -> stopStreaming());
@@ -97,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
     private void registerUsbPermissionReceiver() {
         usbPermissionFilter = new IntentFilter("com.usbvideoout.USB_PERMISSION");
         usbPermissionReceiver = new UsbPermissionReceiver();
-        // 使用带flags的方法注册，指定不导出
         registerReceiver(usbPermissionReceiver, usbPermissionFilter, Context.RECEIVER_NOT_EXPORTED);
 
         // 监听权限授予事件
@@ -119,13 +154,19 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // 如果当前是网络模式，不检查USB设备
+        if (rbNetworkMode.isChecked()) {
+            tvUsbStatus.setText("网络模式");
+            return;
+        }
+
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
 
         Log.d(TAG, "USB设备列表大小: " + deviceList.size());
 
         if (deviceList.isEmpty()) {
             tvUsbStatus.setText(R.string.usb_not_found);
-            tvInfo.setText("未检测到USB设备\n\n请检查:\n1. USB-C线缆是否已连接\n2. 手机是否支持USB Host模式\n3. USB设备是否已通电\n4. 是否已授予USB调试权限");
+            tvInfo.setText("未检测到USB设备\n\n提示: 荣耀/HarmonyOS设备建议使用网络模式");
             connectedDevice = null;
             btnStart.setEnabled(false);
         } else {
@@ -199,7 +240,21 @@ public class MainActivity extends AppCompatActivity {
             if (videoService == null) {
                 videoService = new VideoOutputService();
             }
-            
+
+            // 设置输出模式
+            if (rbNetworkMode.isChecked()) {
+                String host = etServerHost.getText().toString().trim();
+                String portStr = etServerPort.getText().toString().trim();
+                if (host.isEmpty() || portStr.isEmpty()) {
+                    Toast.makeText(this, "请输入服务器地址和端口", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                int port = Integer.parseInt(portStr);
+                videoService.setNetworkOutput(host, port);
+            } else {
+                videoService.setUsbOutput();
+            }
+
             videoService.start(this, projectionData, new VideoOutputService.StreamCallback() {
                 @Override
                 public void onStreamStarted() {
@@ -216,7 +271,6 @@ public class MainActivity extends AppCompatActivity {
                 public void onStreamError(String error) {
                     runOnUiThread(() -> {
                         isStreaming = false;
-                        tvStatus.setText(R.string.status_error);
                         tvStatus.setText("错误: " + error);
                         btnStart.setEnabled(true);
                         btnStop.setEnabled(false);
@@ -234,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
                     });
                 }
             });
-            
+
         } catch (Exception e) {
             Toast.makeText(this, "启动失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
