@@ -168,8 +168,8 @@ public class VideoOutputService extends Service {
                 screenWidth,
                 screenHeight,
                 metrics.densityDpi,
-                surface,
-                flags
+                flags,
+                surface
         );
     }
 
@@ -303,7 +303,7 @@ public class VideoOutputService extends Service {
         private VirtualDisplay virtualDisplay;
 
         public VirtualDisplayWrapper(MediaProjection projection, String name, int width, int height,
-                                     int density, Surface surface, int flags) {
+                                     int density, int flags, Surface surface) {
             virtualDisplay = projection.createVirtualDisplay(name, width, height, density,
                     surface, flags, null, null);
         }
