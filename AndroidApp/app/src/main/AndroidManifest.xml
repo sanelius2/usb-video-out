@@ -23,7 +23,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.USBVideoOut"
         tools:targetApi="34">
-        
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -45,6 +45,15 @@
                 android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
                 android:resource="@xml/usb_device_filter" />
         </activity>
+
+        <!-- USB权限接收器 -->
+        <receiver
+            android:name=".UsbPermissionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.usbvideoout.USB_PERMISSION" />
+            </intent-filter>
+        </receiver>
 
         <!-- 视频输出服务 -->
         <service

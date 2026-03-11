@@ -1,22 +1,28 @@
 package com.usbvideoout;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private static final int SCREEN_CAPTURE_REQUEST_CODE = 100;
     private static final int USB_PERMISSION_REQUEST_CODE = 101;
 
@@ -31,6 +37,10 @@ public class MainActivity extends AppCompatActivity {
     private Button btnStart;
     private Button btnStop;
 
+    private UsbDevice connectedDevice;
+    private UsbPermissionReceiver usbPermissionReceiver;
+    private IntentFilter usbPermissionFilter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,7 +48,17 @@ public class MainActivity extends AppCompatActivity {
 
         initViews();
         initManagers();
+        registerUsbPermissionReceiver();
         checkUsbDevices();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (usbPermissionReceiver != null) {
+            unregisterReceiver(usbPermissionReceiver);
+        }
+        stopStreaming();
     }
 
     private void initViews() {
@@ -57,26 +77,64 @@ public class MainActivity extends AppCompatActivity {
         projectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
     }
 
+    private void registerUsbPermissionReceiver() {
+        usbPermissionFilter = new IntentFilter("com.usbvideoout.USB_PERMISSION");
+        usbPermissionReceiver = new UsbPermissionReceiver();
+        registerReceiver(usbPermissionReceiver, usbPermissionFilter);
+
+        // 监听权限授予事件
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        checkUsbDevices(); // 权限授予后重新检查设备
+                    }
+                },
+                new IntentFilter("com.usbvideoout.USB_PERMISSION_GRANTED")
+        );
+    }
+
     private void checkUsbDevices() {
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
-        
+
         if (deviceList.isEmpty()) {
             tvUsbStatus.setText(R.string.usb_not_found);
+            connectedDevice = null;
             btnStart.setEnabled(false);
         } else {
-            tvUsbStatus.setText(R.string.usb_connected);
-            tvInfo.setText("检测到USB设备:\n");
-            
-            for (Map.Entry<String, UsbDevice> entry : deviceList.entrySet()) {
-                UsbDevice device = entry.getValue();
-                tvInfo.append(String.format("%s (VID:0x%04X PID:0x%04X)\n",
-                        device.getDeviceName(),
-                        device.getVendorId(),
-                        device.getProductId()));
+            // 检测到设备，请求权限
+            UsbDevice firstDevice = deviceList.values().iterator().next();
+            connectedDevice = firstDevice;
+
+            // 检查是否已有权限
+            if (!usbManager.hasPermission(firstDevice)) {
+                tvUsbStatus.setText("检测到设备，请求权限...");
+                requestUsbPermission(firstDevice);
+            } else {
+                tvUsbStatus.setText(R.string.usb_connected);
+                tvInfo.setText("检测到USB设备:\n");
+
+                for (Map.Entry<String, UsbDevice> entry : deviceList.entrySet()) {
+                    UsbDevice device = entry.getValue();
+                    tvInfo.append(String.format("%s (VID:0x%04X PID:0x%04X)\n",
+                            device.getDeviceName(),
+                            device.getVendorId(),
+                            device.getProductId()));
+                }
+
+                btnStart.setEnabled(true);
             }
-            
-            btnStart.setEnabled(true);
         }
+    }
+
+    private void requestUsbPermission(UsbDevice device) {
+        PendingIntent permissionIntent = PendingIntent.getBroadcast(
+                this,
+                0,
+                new Intent("com.usbvideoout.USB_PERMISSION"),
+                PendingIntent.FLAG_IMMUTABLE
+        );
+        usbManager.requestPermission(device, permissionIntent);
     }
 
     private void requestScreenCapture() {
@@ -95,6 +153,12 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, R.string.screen_permission_message, Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkUsbDevices(); // 每次返回时重新检查USB设备
     }
 
     private void startStreaming(Intent projectionData) {
@@ -147,11 +211,5 @@ public class MainActivity extends AppCompatActivity {
         if (videoService != null && isStreaming) {
             videoService.stop();
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        stopStreaming();
     }
 }

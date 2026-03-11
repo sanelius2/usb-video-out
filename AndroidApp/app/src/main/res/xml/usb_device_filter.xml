@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- USB设备过滤器 -->
-    <!-- 这里可以根据需要添加特定的USB设备VID/PID -->
-    <!-- 示例：DisplayLink设备 -->
-    <!-- 
-    <usb-device vendor-id="0x17e9" />
-    -->
-    
-    <!-- 指定USB类别 -->
-    <usb-device class="239" subclass="2" protocol="1" /> <!-- Video Class -->
+    <!-- USB设备过滤器 - 允许所有USB设备 -->
+    <!-- 移除类别限制，以便检测更多类型的USB设备 -->
 </resources>
